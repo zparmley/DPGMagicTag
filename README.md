@@ -1,2 +1,2 @@
 # DpgMagicTag
-An alternate interface for creating objects in DearPyGUI
+A composable tag system useable with DearPyGUI

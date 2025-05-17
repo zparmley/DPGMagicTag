@@ -1,7 +1,7 @@
 [project]
 name = "dpgmagictag"
 version = "0.1.0"
-description = "Add your description here"
+description = "A composable tag system useable with DearPyGUI"
 readme = "README.md"
 authors = [
     { name = "Zachary Parmley", email = "zachary.parmley@local" }
