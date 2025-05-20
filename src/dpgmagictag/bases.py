@@ -1,4 +1,6 @@
+import fnmatch
 import functools
+import re
 
 
 @functools.cache
@@ -98,11 +100,6 @@ class PathBase:
         """Return the string representation of the path."""
         return self._raw_path
 
-    # def as_posix(self):
-    #     """Return the string representation of the path with forward (/)
-    #     slashes."""
-    #     return str(self).replace(self.parser.sep, '/')
-
     @property
     def name(self):
         """The final path component, if any."""
@@ -116,43 +113,12 @@ class PathBase:
         _, index = self._raw_path.rsplit('[', maxsplit=1)
         return int(index[:-1])
 
-    # @property
-    # def suffix(self):
-    #     """
-    #     The final component's last suffix, if any.
-
-    #     This includes the leading period. For example: '.txt'
-    #     """
-    #     name = self.name
-    #     i = name.rfind('.')
-    #     if 0 < i < len(name) - 1:
-    #         return name[i:]
-    #     else:
-    #         return ''
-
-    # @property
-    # def suffixes(self):
-    #     """
-    #     A list of the final component's suffixes, if any.
-
-    #     These include the leading periods. For example: ['.tar', '.gz']
-    #     """
-    #     name = self.name
-    #     if name.endswith('.'):
-    #         return []
-    #     name = name.lstrip('.')
-    #     return ['.' + suffix for suffix in name.split('.')[1:]]
-
     @property
     def stem(self):
-        """The final path component, minus member specifier, if present."""
+        """The final path component"""
         name = self.name
         if name.endswith(']'):
             name, _ = name.rsplit('[', maxsplit=1)
-        # i = name.rfind('.')
-        # if 0 < i < len(name) - 1:
-        #     return name[:i]
-        # else:
         return name
 
     def with_name(self, name: str):
@@ -161,17 +127,6 @@ class PathBase:
         if split(name)[0]:
             raise ValueError(f"Invalid name {name!r}")
         return self.with_segments(split(self._raw_path)[0], name)
-
-    def with_stem(self, stem):
-        """Return a new path with the stem changed."""
-        index = self.member_index
-        if not index:
-            return self.with_name(stem)
-        elif not stem:
-            # If the member index is non-empty, we can't make the stem empty.
-            raise ValueError(f"{self!r} has a member index")
-        else:
-            return self.with_name(stem + f'[{index}]')
 
     def with_member_index(self, index: int):
         """Return a new path with the file suffix changed.  If the path
@@ -300,52 +255,13 @@ class PathBase:
             parent = split(path)[0]
         return tuple(parents)
 
-    def is_absolute(self):
-        """True if the path is absolute (has both a root and, if applicable,
-        a drive)."""
-        return self.parser.isabs(self._raw_path)
-
-    @property
-    def _pattern_str(self):
-        """The path expressed as a string, for use in pattern-matching."""
-        return str(self)
-
-    def match(self, path_pattern, *, case_sensitive=None):
+    def match(self, path_pattern: str | re.Pattern) -> bool:
         """
-        Return True if this path matches the given pattern. If the pattern is
-        relative, matching is done from the right; otherwise, the entire path
-        is matched. The recursive wildcard '**' is *not* supported by this
-        method.
+        Return True if this path matches the given pattern. if path_pattern is
+        a str, it is matching is done via the fnmatch.fnmatchcase.  See the
+        fnmatch module for matching rules.  If path_pattern is a compiled regex
+        (via re.compile) the path is simply tested with .match(path)
         """
-        if not isinstance(path_pattern, PathBase):
-            path_pattern = self.with_segments(path_pattern)
-        if case_sensitive is None:
-            case_sensitive = _is_case_sensitive(self.parser)
-        sep = path_pattern.parser.sep
-        path_parts = self.parts[::-1]
-        pattern_parts = path_pattern.parts[::-1]
-        if not pattern_parts:
-            raise ValueError("empty pattern")
-        if len(path_parts) < len(pattern_parts):
-            return False
-        if len(path_parts) > len(pattern_parts) and path_pattern.anchor:
-            return False
-        globber = self._globber(sep, case_sensitive)
-        for path_part, pattern_part in zip(path_parts, pattern_parts):
-            match = globber.compile(pattern_part)
-            if match(path_part) is None:
-                return False
-        return True
-
-    def full_match(self, pattern, *, case_sensitive=None):
-        """
-        Return True if this path matches the given glob-style pattern. The
-        pattern is matched against the entire path.
-        """
-        if not isinstance(pattern, PathBase):
-            pattern = self.with_segments(pattern)
-        if case_sensitive is None:
-            case_sensitive = _is_case_sensitive(self.parser)
-        globber = self._globber(pattern.parser.sep, case_sensitive, recursive=True)
-        match = globber.compile(pattern._pattern_str)
-        return match(self._pattern_str) is not None
+        if isinstance(path_pattern, re.Pattern):
+            return path_pattern.match(self._raw_path) is not None
+        return fnmatch.fnmatchcase(self._raw_path, path_pattern)

@@ -5,7 +5,6 @@ from dpgmagictag.bases import PathBase
 
 class Constants:
     SEP: typing.ClassVar[str] = '/'
-    # HERE_PLACEHOLDER: typing.ClassVar[str] = '@'
 
 
 type PathType = typing.Union[str, 'Path']
@@ -18,10 +17,6 @@ def strip_magic_tag_path(path: PathType) -> str:
             or path.endswith(Constants.SEP)
     ):
         path = path.strip(Constants.SEP)
-        # if path.startswith(
-        #     Constants.HERE_PLACEHOLDER + Constants.SEP
-        # ):
-        #     path = path[2:]
     return path
 
 
@@ -30,11 +25,8 @@ def normalize_magic_tag_path(path: PathType) -> str:
         path = str(path)
 
     DOUBLE_SEP = Constants.SEP * 2
-    # SEP_HERE_SEP = Constants.HERE_PLACEHOLDER.join(DOUBLE_SEP)
 
-    while (DOUBLE_SEP in path): # or (SEP_HERE_SEP in path):
-        # while SEP_HERE_SEP in path:
-        #     path = path.replace(SEP_HERE_SEP, Constants.SEP)
+    while (DOUBLE_SEP in path):
         path = path.replace(DOUBLE_SEP, Constants.SEP)
     path = strip_magic_tag_path(path)
     return path

@@ -24,12 +24,12 @@ class MagicTag(str):
             path = kwargs['path'] / path_str
         else:
             default_factory = cls.__dataclass_fields__['path'].default_factory
-            assert callable(default_factory)
-            path = default_factory() / path_str
+            path = default_factory() / path_str  # type: ignore
         if 'context' in kwargs:
             root = kwargs['context'].root
         else:
-            root = Context.default_context().root
+            default_factory = cls.__dataclass_fields__['context'].default_factory
+            root = default_factory().root  # type: ignore
         full_path_str = cls._str(root, path)
 
         return super(MagicTag, cls).__new__(cls, full_path_str)
@@ -41,7 +41,6 @@ class MagicTag(str):
     def _path_created(self, path: Path | None = None):
         if path is None:
             path = self.path
-        self.context.created.append(str(path))
         self.context.existing.add(path)
 
     def __truediv__(self, part: str | typing.Self | Path):
@@ -71,25 +70,6 @@ class MagicTag(str):
             and key.step is None
         ):
             pass
-
-    # def member(self):
-    #     name = self.path.name
-    #     if name.endswith(']'):
-    #         name, _ = name.rsplit('[', maxsplit=1)
-    #     path_str = str(self.path)
-    #     prefix, name = self.path.parser.split(str(self.path))
-    #     if name.endswith(']'):
-    #         name, _ = name.rsplit('[', maxsplit=1)
-    #     new_index, self.context.member_counts[path_str] = (
-    #         self.context.member_counts[path_str],
-    #         self.context.member_counts[path_str] + 1,
-    #     )
-    #     name = f'{name}[{new_index}]'
-    #     return MagicTag(
-    #         context=self.context,
-    #         path=Path(prefix) / name,
-    #     )
-
 
     def __repr__(self):
         return f'{type(self).__name__}(path={repr(self.path)}, context={repr(self.context)})'
