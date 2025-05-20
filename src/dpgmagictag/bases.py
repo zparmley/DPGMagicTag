@@ -3,13 +3,6 @@ import functools
 import re
 
 
-@functools.cache
-def _is_case_sensitive(parser):
-    """Courtesy of https://github.com/python/cpython/blob/3.13/Lib/pathlib/_abc.py#L44
-    """
-    return parser.normcase('Aa') == 'Aa'
-
-
 class UnsupportedOperation(NotImplementedError):
     """Courtesy of https://github.com/python/cpython/blob/3.13/Lib/pathlib/_abc.py#L48
 
@@ -51,12 +44,6 @@ class ParserBase:
         Either part may be empty.
         """
         raise UnsupportedOperation(self._unsupported_msg('split()'))
-
-    def splitdrive(self, path):
-        """Split the path into a 2-item tuple (drive, tail), where *drive* is
-        a device name or mount point, and *tail* is everything after the
-        drive. Either part may be empty."""
-        raise UnsupportedOperation(self._unsupported_msg('splitdrive()'))
 
     def normcase(self, path):
         """Normalize the case of the path."""
@@ -106,14 +93,6 @@ class PathBase:
         return self.parser.split(self._raw_path)[1]
 
     @property
-    def member_index(self) -> int | None:
-        '''The member # of this path, if any.'''
-        if not self._raw_path.endswith(']'):
-            return None
-        _, index = self._raw_path.rsplit('[', maxsplit=1)
-        return int(index[:-1])
-
-    @property
     def stem(self):
         """The final path component"""
         name = self.name
@@ -127,18 +106,6 @@ class PathBase:
         if split(name)[0]:
             raise ValueError(f"Invalid name {name!r}")
         return self.with_segments(split(self._raw_path)[0], name)
-
-    def with_member_index(self, index: int):
-        """Return a new path with the file suffix changed.  If the path
-        has no suffix, add given suffix.  If the given suffix is an empty
-        string, remove the suffix from the path.
-        """
-        stem = self.stem
-        if not stem:
-            # If the stem is empty, we can't make the member index non-empty.
-            raise ValueError(f"{self!r} has an empty name")
-        else:
-            return self.with_name(stem + f'[{index}]')
 
     def relative_to(self, other, *, walk_up=False):
         """Return the relative path to another path identified by the passed

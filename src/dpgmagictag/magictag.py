@@ -1,4 +1,5 @@
 import dataclasses
+import operator
 import random
 import string
 import typing
@@ -63,14 +64,6 @@ class MagicTag(str):
             path=part / self.path,
         )
 
-    def __getitem__(self, key: typing.SupportsIndex | slice):
-        if isinstance(key, slice) and (
-            key.start is None
-            and key.stop is None
-            and key.step is None
-        ):
-            pass
-
     def __repr__(self):
         return f'{type(self).__name__}(path={repr(self.path)}, context={repr(self.context)})'
 
@@ -80,6 +73,16 @@ class MagicTag(str):
 
     def __str__(self):
         return self._str(self.context.root, self.path)
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def query(self, pattern: str, relative: bool=True):
+        paths: set[Path] | filter[Path] = self.context.query(pattern)
+        if relative:
+            # paths = filter(operator.methodcaller('is_relative_to', self.path), paths)
+            paths = filter(lambda path: path.is_relative_to(self.path), paths)
+        return set(MagicTag(path=path, context=self.context) for path in paths)
 
     @classmethod
     def random_factory(cls):

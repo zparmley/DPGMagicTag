@@ -61,12 +61,6 @@ class PathParser(ParserBase):
         left, right = path.rsplit(self.sep, 1)
         return (left, right)
 
-    def splitdrive(self, path: str) -> tuple[str, str]:
-        """Split the path into a 2-item tuple (drive, tail), where *drive* is
-        a device name or mount point, and *tail* is everything after the
-        drive. Either part may be empty."""
-        return ('', path)
-
     def normcase(self, path) -> str:
         """Normalize the case of the path."""
         return path
