@@ -1,6 +1,6 @@
 [project]
 name = "dpgmagictag"
-version = "0.1.0"
+version = "0.1.1"
 description = "A composable tag system for use with DearPyGUI"
 readme = "README.md"
 authors = [
