@@ -2,6 +2,11 @@
 
 A composable tag system useable with DearPyGUI
 
+## Installation
+
+```bash
+pip install dpgmagictag
+```
 ## Motivation
 
 [DearPyGUI](https://github.com/hoffstadt/DearPyGui) allows memorable tags for
